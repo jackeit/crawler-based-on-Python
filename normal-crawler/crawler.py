@@ -258,8 +258,6 @@ class Crawler:
             self.chap_number += 1
             print("having claw amount : %s \n" % self.amount)
 
-
-
     def go_next_chapter(self):
         """点击下一章，然后随机等待一段时间"""
         waitingtime = random.randint(self.perwaitingtime[0], self.perwaitingtime[1])

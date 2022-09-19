@@ -17,8 +17,8 @@
     "nextchapterbuttonXpath" :"//div[@class='section-opt']/a[contains(text(),'下一章')]"
   },
   "title_replace_regexp": {
-    "replacedstr":["章节",""],
-    "replaceregexp": ["分卷阅读","正文"]
+    "replacedstr":["章节","",""],
+    "replaceregexp": ["分卷阅读","正文"," "]
   },
   "content_replace_regexp": {
     "replacedstr": [""],
