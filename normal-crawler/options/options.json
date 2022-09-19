@@ -1,0 +1,28 @@
+{
+  "browser": {
+    "perwaitingtime": [1,3],
+    "writingmode": 1,
+    "mode": 0,
+    "timeout": 5,
+    "defaultbrowser": ""
+
+  },
+  "bookinfolocation": {
+    "novelabstracturl": "http://www.huanxiangji.com/book/1055/",
+    "firstchapterurl": "http://www.huanxiangji.com/book/1055/436942.html",
+    "booknameXpath":"//div[@class='top']/h1",
+    "titleXpath":"//h1[@class='title']",
+    "contentXpath" : "//div[@class='reader-main']/div[@class='content']",
+    "bookabstractXpath" : "//div[@class='info']/div[@class='desc xs-hidden']",
+    "nextchapterbuttonXpath" :"//div[@class='section-opt']/a[contains(text(),'下一章')]"
+  },
+  "title_replace_regexp": {
+    "replacedstr":["章节",""],
+    "replaceregexp": ["分卷阅读","正文"]
+  },
+  "content_replace_regexp": {
+    "replacedstr": [""],
+    "replaceregexp": [""]
+  },
+  "update": 0
+}
