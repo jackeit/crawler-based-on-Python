@@ -1,1 +1,3 @@
 # crawler-based-on-Python
+
+目前已完成基于selenium接管已打开的chrome浏览器进行爬取的通用小说爬虫normal-crawler
