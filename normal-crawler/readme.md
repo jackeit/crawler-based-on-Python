@@ -7,7 +7,7 @@
 
 只需要改变options文件夹下的配置文件options.json，就可以实现不同小说网站的小说爬取，目前每执行一次只能爬取一本指定的小说，因为爬取的量小，所以没有设置代理选项，而为了使本爬虫程序尽可能通用~~也为了尽可能方便~~，所以不采取selenium无界面爬取（可以通过登录有界面的chrome获取待爬取网站的cookie来进行登录小说网站的爬取，设置好cookie后再关闭有界面的chrome继而开启无界面爬取，但是如果不是接管已开启的有界面chrome进行爬取的话，如果网站有对应的反selenium爬虫手段，比如根据字段window.navigator.webdriver进行反爬，爬虫就会失效，而且直接接管有界面chrome进行爬取的话，可以解决短时间登录频繁导致被禁止登录或者会出现麻烦的验证码验证等问题）或者使用基本查询库如requests、urllib等等+解析库如lxml、BeautifulSoup4等等的组合来编写爬虫程序
 ***
-selenium可实现所<font color=red>**见即所爬**</font>，也就是说<font color=red>**不可见即不可爬**</font>（至少不可见的节点内容虽然可以在开发者工具栏中见到且可以通过selenium定位到元素但获取内容为空，虽然可以通过lxml等解析库对浏览器page_source进行内容解析获取，但我没有这么做）,如果通过chrome开发者工具定位xpath，需要注意此时网页HTML中使用的样式及网页显示内容会不会随着开发者工具栏大小的变化而变化，驱动浏览器进行抓取的时候默认是没有打开开发者工具栏的，如果实在无法定位好元素可以采用fiddle抓包分析。
+selenium可实现<font color=red>所见即所爬</font>，也就是说<font color=red>不可见即不可爬</font>（至少不可见的节点内容虽然可以在开发者工具栏中见到且可以通过selenium定位到元素但获取内容为空，虽然可以通过lxml等解析库对浏览器page_source进行内容解析获取，但我没有这么做）,如果通过chrome开发者工具定位xpath，需要注意此时网页HTML中使用的样式及网页显示内容会不会随着开发者工具栏大小的变化而变化，驱动浏览器进行抓取的时候默认是没有打开开发者工具栏的，如果实在无法定位好元素可以采用fiddle抓包分析。
 ***
 ## 配置参数
 下面是options.json配置文件的各种参数：
@@ -38,12 +38,14 @@ content_replace_regexp中的replacedstr 和 replaceregexp对应内容的正则�
 "update": 0 ,(int 1 或 0，为0时爬取整本书的全部内容；为1时从上次中断爬取的地方继续爬取，即更新小说，
 但是待更新小说必须在爬取目录的book文件夹下并且没有删除小说的最后一行以<<ending开头的内容)
 ```
-可以使用命令行程序或者IDE如Pycharm等运行程序，如果运行出了什么问题，请使用管理员身份运行程序。需要在python中安装好对应的库文件如selenium，另外请下载对应的chromedriver并将其<font color=red>**置于环境变量**</font>中，<font color=red>**chromedriver版本与chrome版本务必一致**</font>，否则可能会出一些莫名其妙的错误。
+可以使用命令行程序或者IDE如Pycharm等运行程序，如果运行出了什么问题，请使用管理员身份运行程序。需要在python中安装好对应的库文件如selenium，另外请下载对应的chromedriver并将其<font color=red>置于环境变量</font>中，<font color=red>chromedriver版本与chrome版本务必一致</font>，否则可能会出一些莫名其妙的错误。
 chromedriver下载：[chromedriver下载](https://chromedriver.storage.googleapis.com/index.html)
 ***
 ## 测试样例
 下面是所有测试网站中的某个小说网站中某本小说(章数只有12，拿来测试刚刚好)的测试爬虫的参数：
+
 chromedriver version:105.0.5195.52
+
 chrome version:105.0.5195.127
 ```json
 {
@@ -65,8 +67,8 @@ chrome version:105.0.5195.127
     "nextchapterbuttonXpath" :"//div[@class='section-opt']/a[contains(text(),'下一章')]"
   },
   "title_replace_regexp": {
-    "replacedstr":["章节",""],
-    "replaceregexp": ["分卷阅读","正文"]
+    "replacedstr":["章节","",""],
+    "replaceregexp": ["分卷阅读","正文"," "]
   },
   "content_replace_regexp": {
     "replacedstr": [""],
@@ -75,13 +77,12 @@ chrome version:105.0.5195.127
   "update": 0
 }
 ```
-***
 测试视频
-
 [1.mp4](testingvideo/1.mp4)
-
 
 爬取到的小说可以在book文件夹下看到
 ![](vx_images/412420211220960.png)
 
 
+## 已存在问题
+~~1.当爬取到小说最后一页时，如果小说最后一页的下一章按钮照样能定到的话，那么最后一章可能会多爬取一次~~（已解决）

@@ -147,7 +147,7 @@ class Crawler:
         self.nextchapter_button_xpath = nextchapterbuttonxpath
 
     def claw_book_abstract(self):
-        """爬取小说标题和简介"""
+        """前往小说简介页面并爬取小说标题和简介"""
         self.browser.get(self.novelabstracturl)
         time.sleep(random.randint(self.perwaitingtime[0], self.perwaitingtime[1]))
 
@@ -171,6 +171,7 @@ class Crawler:
             self.title = self.browser.find_element_by_xpath(self.title_xpath).text
         except NoSuchElementException:
             print("no such title element")
+            self.title = ""
 
         if self.title_reg_zip_replacedstr:
             for reg, replacedstr in self.title_reg_zip_replacedstr:
@@ -184,17 +185,11 @@ class Crawler:
             self.content = self.browser.find_element_by_xpath(self.content_xpath).text
         except NoSuchElementException:
             print("no such content element")
+            self.content = ""
 
         if self.content_reg_zip_replacedstr:
             for reg, replacedstr in self.content_reg_zip_replacedstr:
                 self.content = re.sub(re.compile(reg), replacedstr, self.content)
-
-        # 定位下一章按钮
-        try:
-            self.nextbutton = self.browser.find_element_by_xpath(self.nextchapter_button_xpath)
-        except NoSuchElementException:
-            print("next button no found")
-            self.nextbutton = None
 
     def claw_content_from_pre(self):
         """从上次停止爬取的地方继续爬取"""
@@ -231,15 +226,14 @@ class Crawler:
         self.claw_book_abstract()
         self.write_book_abstract()
         self.go_first_charter()
-        self.claw_title()
-        self.claw_content()
-        self.write_chapter()
+        self.find_next_button()
 
         while self.nextbutton is not None:
-            self.go_next_chapter()
             self.claw_title()
             self.claw_content()
             self.write_chapter()
+            self.go_next_chapter()
+            self.find_next_button()
 
     def write_book_abstract(self):
         with open("./book/" + self.bookname + ".txt", encoding="UTF-8", mode="w") as f:
@@ -257,11 +251,14 @@ class Crawler:
             print("now writing chapter %s : %s \n" % (self.chap_number, self.title))
             f.write("本章字数：%s \n" % len(self.content))
             f.write(self.content + "\n")
-            print("this chapter numbers about %s now writing content %s..." % (len(self.content), self.content[:15]))
+            print(
+                "this chapter numbers about %s now writing content %s..." % (len(self.content), self.content[:15]))
 
             self.amount += len(self.content)
             self.chap_number += 1
             print("having claw amount : %s \n" % self.amount)
+
+
 
     def go_next_chapter(self):
         """点击下一章，然后随机等待一段时间"""
@@ -269,6 +266,7 @@ class Crawler:
         print("waiting for %s s" % waitingtime)
         self.browser.execute_script("window.scrollTo(0,document.body.scrollHeight)")
         time.sleep(waitingtime)
+
         # 不知为何，调用self.nextbutton.click()有可能会触发element click intercepted，
         # 可能是元素被遮罩导致无法点击，改为通过执行js代码前往下一页
         # self.nextbutton.click()
@@ -280,6 +278,14 @@ class Crawler:
         waitingtime = random.randint(self.perwaitingtime[0], self.perwaitingtime[1])
         time.sleep(waitingtime)
         print("waiting for %s s" % waitingtime)
+
+    def find_next_button(self):
+        """定位下一章按钮"""
+        try:
+            self.nextbutton = self.browser.find_element_by_xpath(self.nextchapter_button_xpath)
+        except NoSuchElementException:
+            print("next button no found")
+            self.nextbutton = None
 
     def ending_process(self):
         self.endingurl = self.browser.current_url
