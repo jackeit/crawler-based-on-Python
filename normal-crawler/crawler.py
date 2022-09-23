@@ -5,7 +5,7 @@ import time
 import json
 import datetime
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException, WebDriverException
+from selenium.common.exceptions import NoSuchElementException, WebDriverException, JavascriptException
 from selenium.webdriver.chrome.options import Options
 
 
@@ -32,9 +32,10 @@ class Crawler:
         self.perwaitingtime = [1, 8]
         # 获取某个element的最长等待时间，int
         self.timeout = 20
-        self.nextbutton = None
+        self.nextbutton = ""
         self.chap_number = 1
         self.amount = 0
+        self.totalcrawingtime = 0
 
         self.novelabstracturl = ""
         self.firstchapterurl = ""
@@ -215,10 +216,11 @@ class Crawler:
             self.nextbutton = None
 
         while self.nextbutton is not None:
-            self.go_next_chapter()
+            self.find_next_button()
             self.claw_title()
             self.claw_content()
             self.write_chapter()
+            self.go_next_chapter()
 
     def claw_total_content_restart(self):
         """重新爬取全书的内容"""
@@ -226,14 +228,13 @@ class Crawler:
         self.claw_book_abstract()
         self.write_book_abstract()
         self.go_first_charter()
-        self.find_next_button()
 
         while self.nextbutton is not None:
+            self.find_next_button()
             self.claw_title()
             self.claw_content()
             self.write_chapter()
             self.go_next_chapter()
-            self.find_next_button()
 
     def write_book_abstract(self):
         with open("./book/" + self.bookname + ".txt", encoding="UTF-8", mode="w") as f:
@@ -244,31 +245,36 @@ class Crawler:
                 f.write("---------------------------\n")
 
     def write_chapter(self):
-        with open("./book/" + self.bookname + ".txt", encoding="UTF-8", mode="a") as f:
-            self.title = self.title if self.writingmode == 0 else (str(self.chap_number) + "." + self.title)
+        if self.browser.current_url != self.novelabstracturl:
+            with open("./book/" + self.bookname + ".txt", encoding="UTF-8", mode="a") as f:
+                self.title = self.title if self.writingmode == 0 else (str(self.chap_number) + "." + self.title)
 
-            f.write(self.title + "\n")
-            print("now writing chapter %s : %s \n" % (self.chap_number, self.title))
-            f.write("本章字数：%s \n" % len(self.content))
-            f.write(self.content + "\n")
-            print(
-                "this chapter numbers about %s now writing content %s..." % (len(self.content), self.content[:15]))
+                f.write(self.title + "\n")
+                print("now writing chapter %s : %s \n" % (self.chap_number, self.title))
+                f.write("本章字数：%s \n" % len(self.content))
+                f.write(self.content + "\n")
+                print(
+                    "this chapter numbers about %s now writing content %s..." % (len(self.content), self.content[:20]))
 
-            self.amount += len(self.content)
-            self.chap_number += 1
-            print("having claw amount : %s \n" % self.amount)
+                self.amount += len(self.content)
+                self.chap_number += 1
+                print("having claw amount : %s \n" % self.amount)
 
     def go_next_chapter(self):
         """点击下一章，然后随机等待一段时间"""
         waitingtime = random.randint(self.perwaitingtime[0], self.perwaitingtime[1])
-        print("waiting for %s s" % waitingtime)
         self.browser.execute_script("window.scrollTo(0,document.body.scrollHeight)")
-        time.sleep(waitingtime)
-
         # 不知为何，调用self.nextbutton.click()有可能会触发element click intercepted，
         # 可能是元素被遮罩导致无法点击，改为通过执行js代码前往下一页
         # self.nextbutton.click()
-        self.browser.execute_script("arguments[0].click()", self.nextbutton)
+        try:
+            self.browser.execute_script("arguments[0].click()", self.nextbutton)
+        except JavascriptException:
+            print("this button may be null or noclickable")
+        print("waiting for %s s" % waitingtime)
+        time.sleep(waitingtime)
+        if self.browser.current_url == self.bookabstract:
+            self.nextbutton = None
 
     def go_first_charter(self):
         self.browser.get(self.firstchapterurl)
@@ -278,7 +284,9 @@ class Crawler:
         print("waiting for %s s" % waitingtime)
 
     def find_next_button(self):
-        """定位下一章按钮"""
+        """定位下一章按钮,并记录结束页url"""
+        if self.browser.current_url != self.novelabstracturl:
+            self.endingurl = self.browser.current_url
         try:
             self.nextbutton = self.browser.find_element_by_xpath(self.nextchapter_button_xpath)
         except NoSuchElementException:
@@ -286,7 +294,8 @@ class Crawler:
             self.nextbutton = None
 
     def ending_process(self):
-        self.endingurl = self.browser.current_url
+        if self.browser.current_url != self.novelabstracturl:
+            self.endingurl = self.browser.current_url
         with open("./book/" + self.bookname + ".txt", mode="a", encoding="UTF-8") as f:
             f.write("<<endingtitlenum:%s><endingurl-->%s>>" % (self.chap_number, self.endingurl))
         print("ending")
